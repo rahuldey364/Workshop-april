@@ -3,7 +3,7 @@ version: '3.8'
 services:
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: rabbitmq-workshop
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -104,6 +104,31 @@ services:
       - consumer-error
       - consumer-warn
       - consumer-info
+    networks:
+      - lognet
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    environment:
+      - PORT=4500
+      - JWT_SECRET=fhaaaaaaaaa
+    ports:
+      - "4500:4500"
+    networks:
+      - lognet
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    environment:
+      - PORT=8080
+      - JWT_SECRET=fhaaaaaaaaa
+      - AUTH_SERVICE_URL=http://auth-service:4500
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
     networks:
       - lognet
 
