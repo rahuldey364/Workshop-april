@@ -121,11 +121,10 @@ app.use('/dashboard', validateToken, createProxyMiddleware({
     '^/dashboard': ''
   },
   onProxyReq: (proxyReq, req, res) => {
-    // Add authenticated username to header
     if (req.user && req.user.username) {
       proxyReq.setHeader('X-User', req.user.username);
     }
-    // Forward body for POST/PUT requests
+    
     if (req.body) {
       const bodyData = JSON.stringify(req.body);
       proxyReq.setHeader('Content-Type', 'application/json');
