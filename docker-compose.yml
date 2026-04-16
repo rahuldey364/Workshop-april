@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  rabbitmq:
+  rabbitmq-workshop:
     image: rabbitmq:3-management
     container_name: rabbitmq-workshop
     ports:
@@ -19,13 +19,13 @@ services:
     build: ./service-a
     container_name: service-a
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq-workshop:5672
       - SERVICE_NAME=service-a
       - PORT=3001
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     depends_on:
-      rabbitmq:
+      rabbitmq-workshop:
         condition: service_healthy
     networks:
       - lognet
@@ -34,13 +34,13 @@ services:
     build: ./service-b
     container_name: service-b
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq-workshop:5672
       - SERVICE_NAME=service-b
       - PORT=3002
-    ports:
-      - "3002:3002"
+    expose:
+      - "3002"
     depends_on:
-      rabbitmq:
+      rabbitmq-workshop:
         condition: service_healthy
     networks:
       - lognet
@@ -49,13 +49,13 @@ services:
     build: ./consumer-error
     container_name: consumer-error
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq-workshop:5672
       - ROUTING_KEY=logs.error
       - PORT=4001
     ports:
       - "4001:4001"
     depends_on:
-      rabbitmq:
+      rabbitmq-workshop:
         condition: service_healthy
     networks:
       - lognet
@@ -64,13 +64,13 @@ services:
     build: ./consumer-warn
     container_name: consumer-warn
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq-workshop:5672
       - ROUTING_KEY=logs.warn
       - PORT=4002
     ports:
       - "4002:4002"
     depends_on:
-      rabbitmq:
+      rabbitmq-workshop:
         condition: service_healthy
     networks:
       - lognet
@@ -79,13 +79,13 @@ services:
     build: ./consumer-info
     container_name: consumer-info
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq-workshop:5672
       - ROUTING_KEY=logs.info
       - PORT=4003
     ports:
       - "4003:4003"
     depends_on:
-      rabbitmq:
+      rabbitmq-workshop:
         condition: service_healthy
     networks:
       - lognet
@@ -98,8 +98,8 @@ services:
       - CONSUMER_ERROR_URL=http://consumer-error:4001
       - CONSUMER_WARN_URL=http://consumer-warn:4002
       - CONSUMER_INFO_URL=http://consumer-info:4003
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     depends_on:
       - consumer-error
       - consumer-warn
@@ -112,9 +112,9 @@ services:
     container_name: auth-service
     environment:
       - PORT=4500
-      - JWT_SECRET=fhaaaaaaaaa
-    ports:
-      - "4500:4500"
+      - JWT_SECRET=x12@#kjhk^ytyfd
+    expose:
+      - "4500"
     networks:
       - lognet
 
@@ -123,12 +123,15 @@ services:
     container_name: gateway
     environment:
       - PORT=8080
-      - JWT_SECRET=fhaaaaaaaaa
       - AUTH_SERVICE_URL=http://auth-service:4500
+      - JWT_SECRET=x12@#kjhk^ytyfd
     ports:
       - "8080:8080"
     depends_on:
       - auth-service
+      - service-a
+      - service-b
+      - dashboard
     networks:
       - lognet
 
